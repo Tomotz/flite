@@ -46,6 +46,7 @@
 #include "cst_units.h"
 #include "cst_synth.h"
 #include "cst_phoneset.h"
+#include <assert.h>
 
 CST_VAL_REGISTER_FUNCPTR(breakfunc,cst_breakfunc)
 
