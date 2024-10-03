@@ -220,8 +220,9 @@ cst_utterance *default_tokenization(cst_utterance *u)
     while(!ts_eof(fd))
     {
 	token = ts_get(fd);
-	if (cst_strlen(token) > 0)
-	{
+    /* allow empty token for cases where we have a puncuation on it's own. Example - "I . am"*/
+	// if (cst_strlen(token) > 0)
+	// {
 	    t = relation_append(r,NULL);
 	    item_set_string(t,"name",token);
 	    item_set_string(t,"whitespace",fd->whitespace);
@@ -229,7 +230,7 @@ cst_utterance *default_tokenization(cst_utterance *u)
 	    item_set_string(t,"punc",fd->postpunctuation);
 	    item_set_int(t,"file_pos",fd->file_pos);
 	    item_set_int(t,"line_number",fd->line_number);
-	}
+	// }
     }
 
     ts_close(fd);
