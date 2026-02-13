@@ -151,7 +151,18 @@ cst_utterance *apply_synth_module(cst_utterance *u,
     if (v)
 	return (*val_uttfunc(v))(u);
     if (mod->defhook)
-	return (*mod->defhook)(u);
+        /*
+        default_tokenization
+        default_textanalysis
+        default_pos_tagger
+        default_phrasing
+        default_lexical_insertion
+        default_pause_insertion
+        cart_intonation
+        cmu_us_kal_postlex
+        cart_duration
+        */
+	    return (*mod->defhook)(u);
     return u;
 }
 
