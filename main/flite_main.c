@@ -106,7 +106,9 @@ static void flite_usage()
            "  -psdur      Print segments and their durations (end-time)\n"
 	   "  -pr RelName Print relation RelName\n"
            "  -voicedump FILENAME Dump selected (cg) voice to FILENAME\n"
-           "  -v          Verbose mode\n");
+           "  -v          Verbose mode\n"
+	   "  --ipa-stdin Read lines from stdin, output IPA for each line.\n"
+	   "              Voice stays loaded across all lines (fast batch mode).\n");
     exit(0);
 }
 
@@ -207,7 +209,7 @@ int main(int argc, char **argv)
     int i;
     float durs;
     double time_start, time_end;
-    int flite_verbose, flite_loop, ipa_only, flite_bench;
+    int flite_verbose, flite_loop, ipa_only, flite_bench, ipa_stdin;
     int explicit_filename, explicit_text, explicit_phones, ssml_mode;
 #define ITER_MAX 3
     int bench_iter = 0;
@@ -224,6 +226,7 @@ int main(int argc, char **argv)
     flite_loop = FALSE;
     ipa_only = FALSE;
     flite_bench = FALSE;
+    ipa_stdin = FALSE;
     explicit_text = explicit_filename = explicit_phones = FALSE;
     ssml_mode = FALSE;
     extra_feats = new_features();
@@ -255,6 +258,8 @@ int main(int argc, char **argv)
 	    flite_loop = TRUE;
 	else if (cst_streq(argv[i],"-i"))
 	    ipa_only = TRUE;
+	else if (cst_streq(argv[i],"--ipa-stdin"))
+	    ipa_stdin = TRUE;
 	else if (cst_streq(argv[i],"-b"))
 	{
 	    flite_bench = TRUE;
@@ -371,7 +376,7 @@ int main(int argc, char **argv)
 	    filename = argv[i];
     }
 
-    if (filename == NULL) filename = "-";  /* stdin */
+    if (filename == NULL && !ipa_stdin) filename = "-";  /* stdin */
     if (flite_voice_list == NULL)
         flite_set_voice_list(voicedir);
     if (desired_voice == 0)
@@ -380,6 +385,30 @@ int main(int argc, char **argv)
     v = desired_voice;
     feat_copy_into(extra_feats,v->features);
     durs = 0.0;
+
+    if (ipa_stdin)
+    {
+        /* Batch IPA mode: read lines from stdin, output IPA for each.
+           Voice stays loaded across all lines, avoiding per-call startup. */
+        char line[65536];
+        while (fgets(line, sizeof(line), stdin) != NULL)
+        {
+            /* Strip trailing newline */
+            size_t len = strlen(line);
+            if (len > 0 && line[len-1] == '\n')
+                line[len-1] = '\0';
+            if (line[0] == '\0')
+            {
+                printf("\n");
+                continue;
+            }
+            flite_text_to_ipa(line, v, "play");
+            fflush(stdout);
+        }
+        delete_features(extra_feats);
+        delete_val(flite_voice_list); flite_voice_list=0;
+        return 0;
+    }
 
     if (voicedumpfile != NULL)
     {
