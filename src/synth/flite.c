@@ -533,7 +533,10 @@ void flite_text_to_ipa(const char *text,
              uttfunc_val(&ipa_no_op_synth));
 
     if (utt_synth(u) == NULL)
+    {
+        delete_utterance(u);
         return;
+    }
 
     if (cst_streq(outtype,"play") || cst_streq(outtype,"stream") || cst_streq(outtype,"none"))
         print_ipa_transcription(u, stdout);
